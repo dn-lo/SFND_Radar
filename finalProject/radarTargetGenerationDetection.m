@@ -19,8 +19,8 @@ c = 3e8;
 % Initial target position (m)
 x0 = 155;
 % Initial target speed (m/s)
-v0 = -30; % receding target
-% v0 = 30; % approaching target
+v0 = -35; % receding target
+% v0 = 35; % approaching target
 
 %% FMCW Waveform Generation
 
@@ -76,8 +76,8 @@ for i=1:length(t)
     td(i) = 2 * r_t(i) / c;
 
     %For each time sample we need update the transmitted and
-    %received signal. NB:  phase of cos is the integral of frequency
-    %f=fc+slope*t
+    %received signal. 
+    %Notice:  phase of cos is the integral of frequency f=fc+slope*t
     % Assuming sawtooth chirp
     
     % transmitted signal
@@ -88,7 +88,7 @@ for i=1:length(t)
     
     %Now by mixing the Transmit and Receive generate the beat signal
     %This is done by element wise matrix multiplication of Transmit and
-    %Receiver Signal. Check sign of speed
+    %Receiver Signal.
     Mix(i) = Tx(i) .* Rx(i);
     
 end
@@ -117,7 +117,7 @@ f = 1/(t(2)-t(1)) * (0:(Nr/2))/Nr;
 range = c / (2 * slope) * f; 
 
 % plotting the range
-figure ('Name','Range from First FFT')
+figure('Name','Range from FFT at t=0 s')
 
 % plot FFT output 
 hold on, grid on
@@ -128,10 +128,8 @@ axis ([0 200 0 0.5]);
 
 
 %% RANGE DOPPLER RESPONSE
-% The 2D FFT implementation is already provided here. This will run a 2DFFT
-% on the mixed signal (beat signal) output and generate a range doppler
-% map.You will implement CFAR on the generated RDM
-
+% The 2D FFT implementation runs a 2DFFT on the mixed signal (beat signal) 
+% output and generates a Range-Doppler map.
 
 % Range Doppler Map Generation.
 
@@ -154,7 +152,7 @@ RDM = pow2db(RDM) ;
 %dimensions
 doppler_axis = linspace(-100, 100, Nd);
 range_axis = linspace(-200 , 200, Nr/2) * ((Nr/2)/400);
-figure()
+figure('Name', 'Range-Doppler Map')
 surf(doppler_axis, range_axis, RDM);
 colorbar;
 xlabel('speed [m/s]')
@@ -196,8 +194,7 @@ noise_level = zeros(size(RDM));
 for i = (1+(Tr+Gr)):(size(RDM,1)-(Tr+Gr))
     
     for j = (1+(Td+Gd)):(size(RDM,2)-(Td+Gd))
-    % Use RDM[x,y] as the matrix from the output of 2D FFT for implementing
-    % CFAR
+    % Use RDM[x,y] as the matrix output of 2D FFT for implementing CFAR
     
     % Here we use linear indexing to select matrix indices
     % Select the grid that includes the training, guard and test cells
@@ -225,20 +222,16 @@ for i = (1+(Tr+Gr)):(size(RDM,1)-(Tr+Gr))
 end
 
 % The process above will generate a thresholded block, which is smaller 
-%than the Range Doppler Map as the CUT cannot be located at the edges of
-%matrix. Hence,few cells will not be thresholded. To keep the map size same
+% than the Range Doppler Map as the CUT cannot be located at the edges of
+% matrix. Hence,few cells will not be thresholded. To keep the map size same
 % set those values to 0. 
-% Already done by initialization
+% This is already done by initialization of sig_cfar
 
 
 %display the CFAR output using the Surf function like we did for Range
 %Doppler Response output.
-figure()
+figure('Name', '2D CA-CFAR output')
 surf(doppler_axis, range_axis, sig_cfar)
 colorbar;
 xlabel('speed [m/s]')
 ylabel('range [m]')
-
-
- 
- 
