@@ -19,8 +19,8 @@ c = 3e8;
 % Initial target position (m)
 x0 = 155;
 % Initial target speed (m/s)
-v0 = 30; % approaching target
-% v0 = -30; % receding target
+v0 = -30; % receding target
+% v0 = 30; % approaching target
 
 %% FMCW Waveform Generation
 
@@ -70,35 +70,26 @@ for i=1:length(t)
     
     %For each time stamp update the Range of the Target for constant velocity. 
     %Assuming t0 = t(1) = 0 s
-    r_t(i) = x0 - v0 * t(i);
+    r_t(i) = x0 + v0 * t(i);
     
     %Compute signal return delay
     td(i) = 2 * r_t(i) / c;
 
     %For each time sample we need update the transmitted and
-    %received signal. TODO: check whether to use slope or slope/2 
-    %slope in case you have sawtooth chirp, slope/2 in case you have
-    %triangular chirp
-    
+    %received signal. NB:  phase of cos is the integral of frequency
+    %f=fc+slope*t
     % Assuming sawtooth chirp
     
     % transmitted signal
-%   Tx(i)  = cos(2*pi * (fc*t(i) + slope*t(i)^2));
-    Tx(i)  = cos(2*pi * ( fc*t(i) + slope* mod(t(i),Tchirp) *t(i) ) ); % reset frequency at each chirp
+    Tx(i)  = cos(2*pi * (fc*t(i) + slope*t(i)^2/2));
     
     % received signal
-%   Rx(i)  = cos(2*pi * ( fc* (t(i)-td(i)) + slope* (t(i)-td(i))^2 ) );
-    Rx(i)  = cos(2*pi * ( fc* (t(i)-td(i)) + slope* mod(t(i)-td(i),Tchirp) *(t(i)-td(i)) ) ); % reset frequency at each chirp
+    Rx(i)  = cos(2*pi * (fc*(t(i)-td(i)) + slope*(t(i)-td(i))^2/2));
     
-    % 
     %Now by mixing the Transmit and Receive generate the beat signal
     %This is done by element wise matrix multiplication of Transmit and
     %Receiver Signal. Check sign of speed
-    Mix(i) = cos(2*pi* (2 * slope * r_t(i)/c * t(i) + 2 * fc * v0/c * t(i)));
-    %*TODO* 
-    % compute it also with elementwise multiplication... but you need the 
-    % correct Tx and Rx signals
-%     Mix(i) = Tx(i) .* Rx(i);
+    Mix(i) = Tx(i) .* Rx(i);
     
 end
 
@@ -127,7 +118,6 @@ range = c / (2 * slope) * f;
 
 % plotting the range
 figure ('Name','Range from First FFT')
-% subplot(2,1,1)
 
 % plot FFT output 
 hold on, grid on
